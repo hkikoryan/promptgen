@@ -14,7 +14,7 @@ content2 = st.text_input('원하는 광고 문구를 적어주세요.')
 
 if st.button('광고 문구 요청하기'):
     with st.spinner('광고 문구 작성중..'):
-        result = chat_model.predict(content1 + "에 대한 브랜드를 짧게 분석하고" + content2 + "에 관련된 짧고 매력있는 광고 문구 5가지를 만들어줘")
+        result = chat_model.predict(content1 + "에 대한 브랜드의 핵심 내용을 짧게 정리하고" + content2 + "에 관련된 짧고 매력있는 광고 카피를 이모티콘을 포함해서 5가지를 만들어줘")
         st.write(result)
 
 
