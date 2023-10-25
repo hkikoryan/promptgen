@@ -29,8 +29,8 @@ def get_prompt(category, image_type, description, image_ratio):
     stream_handler = StreamHandler()
     chat_model = ChatOpenAI(streaming=True, callbacks=[stream_handler])
 
-    # 200자로 제한하여 결과를 얻음
-    chat_model.predict(prompt, max_tokens=200)
+    # 100자로 제한하여 결과를 얻음
+    chat_model.predict(prompt, max_tokens=100)
     
     return f"/imagine prompt: {stream_handler.text} {fixed_part}"
 
