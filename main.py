@@ -1,32 +1,47 @@
-#from dotenv import load_dotenv
-#load_dotenv()
-
+from dotenv import load_dotenv
+load_dotenv()
 import streamlit as st
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
 
+# 간단한 번역 함수
+def translate_to_english(text):
+    translations = {'호텔': 'hotel', '레저': 'leisure', '펜션': 'pension', '모텔': 'motel', '사진': 'photo', '일러스트': 'illustration', '3D': '3D'}
+    return translations.get(text, text)
+
 # StreamHandler 클래스 정의
 class StreamHandler(BaseCallbackHandler):
-    def __init__(self, container, initial_text=""):
-        self.container = container
-        self.text = initial_text
+    def __init__(self):
+        self.text = ""
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         self.text += token
-        self.container.markdown(self.text)
 
-st.title('AI Copy Writer')
-st.title('당신을 위한 광고 문구를 생성해드립니다.')
+# 번역
+def get_prompt(category, image_type, description, image_ratio):
+    category_en = translate_to_english(category)
+    image_type_en = translate_to_english(image_type)
 
-content1 = st.text_input('브랜드 명을 적어주세요.')
-content2 = st.text_input('원하는 광고 문구를 적어주세요.')
+    prompt = f"Imagine a scene in a {category_en} related to {image_type_en} that encapsulates the concept of {description}."
+    fixed_part = f"Photo taken by Sooyeon Lee with Nikon Z6 and an 85mm lens, Award Winning Photography style, Cinematic and Volumetric Lighting, 8K, Ultra-HD, Super-Resolution --ar {image_ratio} --v 5.2"
+    
+    # ChatOpenAI 초기화
+    stream_handler = StreamHandler()
+    chat_model = ChatOpenAI(streaming=True, callbacks=[stream_handler])
 
-# stream_handler 객체 생성
-chat_box = st.empty()
-stream_handler = StreamHandler(chat_box)
+    # 200자로 제한하여 결과를 얻음
+    chat_model.predict(prompt, max_tokens=200)
+    
+    return f"/imagine prompt: {stream_handler.text} {fixed_part}"
 
-# 이제 ChatOpenAI 초기화
-chat_model = ChatOpenAI(streaming=True, callbacks=[stream_handler])
+st.title('미드저니 프롬프트 생성기')
 
-if st.button('광고 문구 요청하기'):
-    with st.spinner('광고 문구 작성중..'):
-        result = chat_model.predict(content1 + "에 대한 브랜드의 핵심 내용을 짧게 정리하고" + content2 + "에 관련된 짧고 매력있는 광고 카피를 이모티콘을 포함해서 5가지를 만들어줘")
+# 사용자 입력
+category = st.selectbox('원하는 카테고리를 선택해주세요.', ['호텔', '레저', '펜션', '모텔'])
+image_type = st.selectbox('원하는 이미지의 형태를 선택해주세요.', ['사진', '일러스트', '3D'])
+description = st.text_input('원하는 이미지를 묘사해주세요.')
+image_ratio = st.selectbox('원하는 이미지의 비율을 선택해주세요.', ['1:1', '9:16', '16:9', '3:4'])
+
+if st.button('프롬프트 생성하기'):
+    with st.spinner('프롬프트 생성 중...'):
+        final_output = get_prompt(category, image_type, description, image_ratio)
+        st.write(final_output)  # final_output만 출력
