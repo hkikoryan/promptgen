@@ -34,7 +34,7 @@ def get_prompt(category, image_type, description, image_ratio):
     
     return f"/imagine prompt: {stream_handler.text} {fixed_part}"
 
-st.title('미드저니 프롬프트 생성기')
+st.title('Midjourney Prompt Generator')
 
 # 사용자 입력
 category = st.selectbox('원하는 카테고리를 선택해주세요.', ['호텔', '레저', '펜션', '모텔'])
