@@ -14,9 +14,14 @@ def translate_to_english(text):
 
 # 문장을 영어로 번역하는 함수
 def translate_sentence_to_english(text):
-    translator = Translator()
-    translated = translator.translate(text, src='ko', dest='en')
-    return translated.text
+    try:
+        translator = Translator()
+        translated = translator.translate(text, src='ko', dest='en')
+        return translated.text
+    except Exception as e:
+        print(f"Translation failed: {e}")
+        return text  # 번역에 실패하면 원래 텍스트를 반환
+
 
 # 각 이미지 타입에 대한 설명을 반환하는 함수
 def get_image_type_description(image_type):
