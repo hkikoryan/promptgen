@@ -33,7 +33,7 @@ class StreamHandler(BaseCallbackHandler):
     def __init__(self):
         self.text = ""
     def on_llm_new_token(self, token: str, **kwargs) -> None:
-        self.text += token.replace('\n', ' ').replace('1.', '').replace('2.', '').replace('Scene 1:', '')  # 줄바꿈, 번호, 'Scene 1:' 제거
+        self.text += token.replace('\n', ' ').replace('1.', '').replace('2.', '').replace('Scene 1:', '').replace('In the first scene,', '')  # 줄바꿈, 번호, 'Scene 1:' 제거
 
 
 # 번역과 프롬프트 생성
@@ -45,7 +45,7 @@ def get_prompt(category, image_type, time_of_day, description, image_ratio):
     image_type_description = get_image_type_description(image_type)
 
     prompt = f"In a {image_type_description} scene during the {time_of_day_en} in a {category_en}, encapsulate the concept of {description_en}."
-    fixed_part = f"Photo taken by Richard Avedon with Nikon Z6 and an 85mm lens, Award Winning Photography style, Cinematic and Volumetric Lighting, 8K, Ultra-HD, Super-Resolution --ar {image_ratio} --v 5.2"
+    fixed_part = f" Photo taken by Richard Avedon with Nikon Z6 and an 85mm lens, Award Winning Photography style, Cinematic and Volumetric Lighting, 8K, Ultra-HD, Super-Resolution --ar {image_ratio} --v 5.2"
 
     # ChatOpenAI 초기화
     stream_handler = StreamHandler()
@@ -54,9 +54,9 @@ def get_prompt(category, image_type, time_of_day, description, image_ratio):
     # 결과 얻기
     chat_model.predict(prompt, max_tokens=100)
 
-    return f"/imagine prompt: {stream_handler.text} {fixed_part}"
+    return f"{stream_handler.text} {fixed_part}"
 
-st.title('Midjourney Prompt Generator')
+st.title('YANOLJA Midjourney Prompt Generator')
 
 # 사용자 입력 레이아웃
 col1, col2, col3, col4 = st.columns(4)
