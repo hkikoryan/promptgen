@@ -4,4 +4,3 @@ streamlit
 python-dotenv
 requests
 googletrans
-clipdrop
