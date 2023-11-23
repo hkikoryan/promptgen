@@ -13,9 +13,12 @@ clipdrop_api_key = os.getenv("CLIPDROP_API_KEY")
 
 # 간단한 번역 함수
 def translate_to_english(text):
-    translations = {'호텔': 'hotel', '레저': 'leisure', '펜션': 'pension', '모텔': 'motel',
-                    '사진': 'photo', '일러스트': 'illustration', '3D': '3D', '아이콘': 'icon',
-                    '새벽': 'dawn', '오전': 'morning', '오후': 'afternoon', '해질녘': 'dusk', '밤': 'night'}
+    translations = {
+        '호텔': 'hotel', '레저': 'leisure', '펜션': 'pension', '모텔': 'motel',
+        '사진': 'photo', '일러스트': 'illustration', '3D': '3D', '아이콘': 'icon',
+        '새벽': 'dawn', '오전': 'morning', '오후': 'afternoon', '해질녘': 'dusk', '밤': 'night',
+        '봄': 'spring', '여름': 'summer', '가을': 'autumn', '겨울': 'winter'  # 계절 번역 추가
+    }
     return translations.get(text, text)
 # 문장을 영어로 번역하는 함수
 def translate_sentence_to_english(text):
@@ -73,11 +76,11 @@ class StreamHandler(BaseCallbackHandler):
 
 
 # 번역과 프롬프트 생성
-def get_prompt(category, image_type, time_of_day, description, image_ratio=None, include_fixed_part=True):
+def get_prompt(category, image_type, season, time_of_day, description, image_ratio=None, include_fixed_part=True):
     # ChatOpenAI 초기화 (함수 시작 부분으로 이동)
     stream_handler = StreamHandler()
     chat_model = ChatOpenAI(streaming=True, callbacks=[stream_handler])
-
+    season_en = translate_to_english(season)  # 계절 번역
     category_en = '' if category == '없음' else translate_to_english(category)
     image_type_en = translate_to_english(image_type)
     time_of_day_en = translate_to_english(time_of_day)
@@ -85,7 +88,7 @@ def get_prompt(category, image_type, time_of_day, description, image_ratio=None,
     image_type_description = get_image_type_description(image_type)
     category_phrase = f"in a {category_en}," if category_en else ""
     
-    prompt = f"In a {image_type_description} scene during the {time_of_day_en} {category_phrase} encapsulate the concept of {description_en}."
+    prompt = f"In a {image_type_description} scene during {season_en}, {time_of_day_en} {category_phrase} encapsulate the concept of {description_en}."
     
     # image_type에 따른 fixed_part 설정 및 max_tokens 설정
     max_tokens = 50  # 기본값
@@ -114,25 +117,31 @@ def get_prompt(category, image_type, time_of_day, description, image_ratio=None,
 st.title('YANOLJA AI Graphic Master')
 
 # 탭을 추가
-tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upcaler"])
+tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upscaler"])
 
 
 if tab == "Prompter":
     # 사용자 입력 레이아웃
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)  # 컬럼 5개로 변경
     with col1:
-        category = st.selectbox('Category', ['없음', '호텔', '펜션', '레저', '모텔'])  # '없음' 추가
+        category = st.selectbox('Category', ['없음', '호텔', '펜션', '레저', '모텔'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
-        time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])
+        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])  # 계절 선택 상자 추가
     with col4:
-        image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4'])
+        time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])  # 기존의 컬럼 3에서 컬럼 4로 이동
+    with col5:
+        image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4'])  # 기존의 컬럼 4에서 컬럼 5로 이동
+        
     description = st.text_input('원하는 이미지를 묘사해주세요.')
+
     if st.button('프롬프트 생성하기'):
         with st.spinner('프롬프트 생성 중...'):
-            final_output = get_prompt(category, image_type, time_of_day, description, image_ratio)
+            # get_prompt 함수 호출 시 season도 인수로 전달
+            final_output = get_prompt(category, image_type, season, time_of_day, description, image_ratio)
             st.write(final_output)  # final_output만 출력
+
 
 
 elif tab == "Image Generator":
@@ -158,7 +167,7 @@ elif tab == "Image Generator":
                 st.write('이미지 생성 실패')
 
 
-elif tab == "Upcaler":
+elif tab == "Upscaler":
     uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_image is not None:
         # 원본 이미지 크기 확인
