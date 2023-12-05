@@ -114,7 +114,7 @@ def get_prompt(category, image_type, season, time_of_day, description, image_rat
 
 
 # Streamlit 앱 시작
-st.title('YANOLJA AI Graphic Master')
+st.title('YAD (Yanolja AI Designer)')
 
 # 탭을 추가
 tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upscaler"])
@@ -146,17 +146,19 @@ if tab == "Prompter":
 
 elif tab == "Image Generator":
     # 사용자 입력 레이아웃
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3,col4 = st.columns(4)
     with col1:
         category = st.selectbox('Category', ['호텔', '레저', '펜션', '모텔'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
+        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])  # 계절 선택 상자 추가
+    with col4:
         time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])
     description = st.text_input('원하는 이미지를 묘사해주세요.')
     if st.button('이미지 생성하기'):
         with st.spinner('이미지 생성 중...'):
-            prompt = get_prompt(category, image_type, time_of_day, description, include_fixed_part=False)
+            prompt = get_prompt(category, image_type, season , time_of_day, description, include_fixed_part=False)
             api_key = os.getenv('OPENAI_API_KEY')  # .env 파일에서 API 키 가져오기
             image_url = generate_image_with_dalle(api_key, prompt)
 
