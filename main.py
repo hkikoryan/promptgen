@@ -169,6 +169,8 @@ elif tab == "Image Generator":
                 st.write('이미지 생성 실패')
 
 
+# 나머지 코드는 동일합니다.
+
 elif tab == "Upscaler":
     uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_image is not None:
@@ -188,7 +190,7 @@ elif tab == "Upscaler":
         if st.button("Upscale Image"):
             image_path = "/tmp/uploaded_image_to_upscale.jpg"
             with open(image_path, "wb") as f:
-                f.write(uploaded_image.read())
+                f.write(uploaded_image.getbuffer())
             upscale_image_bytes = call_clipdrop(image_path, target_width, target_height)
             if upscale_image_bytes is not None:
                 st.download_button(
