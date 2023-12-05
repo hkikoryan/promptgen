@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
-from googletrans import Translator
+from deep_translator import GoogleTranslator  # 수정: deep_translator 추가
 import streamlit as st
 from PIL import Image
 from langchain.chat_models import ChatOpenAI
@@ -20,11 +20,13 @@ def translate_to_english(text):
         '봄': 'spring', '여름': 'summer', '가을': 'autumn', '겨울': 'winter'  # 계절 번역 추가
     }
     return translations.get(text, text)
-# 문장을 영어로 번역하는 함수
+
+# 문장을 영어로 번역하는 함수 (수정)
 def translate_sentence_to_english(text):
-    translator = Translator()
-    translated = translator.translate(text, src='ko', dest='en')
-    return translated.text
+    translator = GoogleTranslator(source='ko', target='en')  # 수정: deep_translator 사용
+    translated = translator.translate(text)
+    return translated
+
 # 각 이미지 타입에 대한 설명을 반환하는 함수
 def get_image_type_description(image_type):
     descriptions = {
