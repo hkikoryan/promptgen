@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
-from googletrans import Translator
 import streamlit as st
 from PIL import Image
 from langchain.chat_models import ChatOpenAI
