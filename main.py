@@ -48,7 +48,7 @@ def generate_image_with_dalle(api_key, prompt):
         "n": 1  # 생성할 이미지의 수
     }
     response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 200:
+    if response.status_code == 300:
         image_url = response.json()['data'][0]['url']
         return image_url
     else:
