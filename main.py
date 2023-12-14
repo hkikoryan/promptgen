@@ -143,6 +143,8 @@ if tab == "Prompter":
             # get_prompt 함수 호출 시 season도 인수로 전달
             final_output = get_prompt(category, image_type, season, time_of_day, description, image_ratio)
             st.write(final_output)  # final_output만 출력
+            st.write("해당 프롬프트를 미드저니에 붙여넣어주세요.")  # 추가된 메시지
+
 
 
 
