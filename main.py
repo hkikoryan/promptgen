@@ -126,7 +126,7 @@ if tab == "Prompter":
     # 사용자 입력 레이아웃
     col1, col2, col3, col4, col5 = st.columns(5)  # 컬럼 5개로 변경
     with col1:
-        category = st.selectbox('Category', ['없음', '호텔', '펜션', '레저', '모텔'])
+        category = st.selectbox('Category', ['없음', '호텔', '펜션', '레저', '모텔' , '항공'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
@@ -150,7 +150,7 @@ elif tab == "Image Generator":
     # 사용자 입력 레이아웃
     col1, col2, col3,col4 = st.columns(4)
     with col1:
-        category = st.selectbox('Category', ['호텔', '레저', '펜션', '모텔'])
+        category = st.selectbox('Category', ['호텔', '레저', '펜션', '모텔', '항공'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
