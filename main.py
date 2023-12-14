@@ -116,7 +116,7 @@ def get_prompt(category, image_type, season, time_of_day, description, image_rat
 
 
 # Streamlit 앱 시작
-st.title('YAD (Yanolja AI Designer)')
+st.title('YAD (Yanolja AI Designer) beta')
 
 # 탭을 추가
 tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upscaler"])
