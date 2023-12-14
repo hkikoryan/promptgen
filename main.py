@@ -14,7 +14,7 @@ clipdrop_api_key = os.getenv("CLIPDROP_API_KEY")
 # 간단한 번역 함수
 def translate_to_english(text):
     translations = {
-        '호텔': 'hotel', '레저': 'leisure', '펜션': 'pension', '모텔': 'motel',
+        '호텔': 'hotel', '레저': 'leisure', '펜션': 'pension', '모텔': 'motel', '항공': 'airplane',
         '사진': 'photo', '일러스트': 'illustration', '3D': '3D', '아이콘': 'icon',
         '새벽': 'dawn', '오전': 'morning', '오후': 'afternoon', '해질녘': 'dusk', '밤': 'night',
         '봄': 'spring', '여름': 'summer', '가을': 'autumn', '겨울': 'winter'  # 계절 번역 추가
