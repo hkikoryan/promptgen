@@ -118,16 +118,11 @@ def get_prompt(category, image_type, season, time_of_day, description, image_rat
 # Streamlit 앱 시작
 st.title('Midjourney Prompter')
 
-# Google AdSense 스크립트 추가
-adsense_code = '''
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8732678803051721"
-     crossorigin="anonymous"></script>
-'''
-st.markdown(adsense_code, unsafe_allow_html=True)
+
 
 
 # 탭을 추가
-tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upscaler"])
+tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator (WIP)", "Upscaler (WIP)"])
 
 
 if tab == "Prompter":
@@ -154,9 +149,14 @@ if tab == "Prompter":
             st.write("해당 프롬프트를 미드저니에 붙여넣어주세요.")  # 추가된 메시지
 
 
-"""
 
-elif tab == "Image Generator":
+
+elif tab == "Image Generator (WIP)":
+
+    # 'Image Generator' 탭의 내용이 아직 정리 중임을 표시
+    st.markdown("### Image Generator 탭은 현재 작업 중입니다.")
+
+    """
     # 사용자 입력 레이아웃
     col1, col2, col3,col4 = st.columns(4)
     with col1:
@@ -179,11 +179,16 @@ elif tab == "Image Generator":
                 st.image(image_url, caption='Generated Image')  # 생성된 이미지 출력
             else:
                 st.write('이미지 생성 실패')
+    """
 
 
 # 나머지 코드는 동일합니다.
 
-elif tab == "Upscaler":
+elif tab == "Upscaler (WIP)":
+    # 'Upscaler' 탭의 내용이 아직 정리 중임을 표시
+    st.markdown("### Upscaler 탭은 현재 작업 중입니다.")
+
+    """
     uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_image is not None:
         # 원본 이미지 크기 확인
@@ -213,5 +218,4 @@ elif tab == "Upscaler":
                 )
             else:
                 st.error("이미지 업스케일링에 실패했습니다.")
-
-"""
+    """
