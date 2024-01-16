@@ -116,7 +116,15 @@ def get_prompt(category, image_type, season, time_of_day, description, image_rat
 
 
 # Streamlit 앱 시작
-st.title('YAD (Yanolja AI Designer) beta')
+st.title('Midjourney Prompter')
+
+# Google AdSense 스크립트 추가
+adsense_code = '''
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8732678803051721"
+     crossorigin="anonymous"></script>
+'''
+st.markdown(adsense_code, unsafe_allow_html=True)
+
 
 # 탭을 추가
 tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upscaler"])
@@ -146,7 +154,7 @@ if tab == "Prompter":
             st.write("해당 프롬프트를 미드저니에 붙여넣어주세요.")  # 추가된 메시지
 
 
-
+"""
 
 elif tab == "Image Generator":
     # 사용자 입력 레이아웃
@@ -205,3 +213,5 @@ elif tab == "Upscaler":
                 )
             else:
                 st.error("이미지 업스케일링에 실패했습니다.")
+
+"""
