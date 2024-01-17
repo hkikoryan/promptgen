@@ -122,7 +122,7 @@ st.title('Midjourney Prompter')
 
 
 # 탭을 추가
-tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator (WIP)", "Upscaler (WIP)"])
+tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upscaler"])
 
 
 if tab == "Prompter":
@@ -173,7 +173,8 @@ elif tab == "Image Generator":
             else:
                 st.write('이미지 생성 실패')
 
-                
+
+
 # 나머지 코드는 동일합니다.
 elif tab == "Upscaler":
     uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
