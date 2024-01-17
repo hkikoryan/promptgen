@@ -140,7 +140,6 @@ if tab == "Prompter":
         image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4'])  # 기존의 컬럼 4에서 컬럼 5로 이동
         
     description = st.text_input('원하는 이미지를 묘사해주세요.')
-
     if st.button('프롬프트 생성하기'):
         with st.spinner('프롬프트 생성 중...'):
             # get_prompt 함수 호출 시 season도 인수로 전달
@@ -151,14 +150,58 @@ if tab == "Prompter":
 
 
 
-elif tab == "Image Generator (WIP)":
+elif tab == "Image Generator":
+    # 사용자 입력 레이아웃
+    col1, col2, col3,col4 = st.columns(4)
+    with col1:
+        category = st.selectbox('Category', ['호텔', '레저', '펜션', '모텔', '항공'])
+    with col2:
+        image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
+    with col3:
+        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])  # 계절 선택 상자 추가
+    with col4:
+        time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])
+    description = st.text_input('원하는 이미지를 묘사해주세요.')
+    if st.button('이미지 생성하기'):
+        with st.spinner('이미지 생성 중...'):
+            prompt = get_prompt(category, image_type, season , time_of_day, description, include_fixed_part=False)
+            api_key = os.getenv('OPENAI_API_KEY')  # .env 파일에서 API 키 가져오기
+            image_url = generate_image_with_dalle(api_key, prompt)
+            if image_url:
+                st.write(f"{prompt}")  # 도출된 프롬프트 출력
+                st.image(image_url, caption='Generated Image')  # 생성된 이미지 출력
+            else:
+                st.write('이미지 생성 실패')
 
-    # 'Image Generator' 탭의 내용이 아직 정리 중임을 표시
-    st.markdown("### Image Generator 탭은 현재 작업 중입니다.")
-
-
-elif tab == "Upscaler (WIP)":
-    # 'Upscaler' 탭의 내용이 아직 정리 중임을 표시
-    st.markdown("### Upscaler 탭은 현재 작업 중입니다.")
-
-
+                
+# 나머지 코드는 동일합니다.
+elif tab == "Upscaler":
+    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    if uploaded_image is not None:
+        # 원본 이미지 크기 확인
+        original_image = Image.open(uploaded_image)
+        original_width, original_height = original_image.size
+        st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
+        # 타겟 크기 설정 옵션
+        size_option = st.selectbox("Choose the scale factor or input size", ['Custom', '2x', '3x', '4x'])
+        if size_option == 'Custom':
+            target_width = st.number_input("Target Width", min_value=1, max_value=4096, value=1024)
+            target_height = st.number_input("Target Height", min_value=1, max_value=4096, value=1024)
+        else:
+            scale_factor = int(size_option.replace('x', ''))
+            target_width = original_width * scale_factor
+            target_height = original_height * scale_factor
+        if st.button("Upscale Image"):
+            image_path = "/tmp/uploaded_image_to_upscale.jpg"
+            with open(image_path, "wb") as f:
+                f.write(uploaded_image.getbuffer())
+            upscale_image_bytes = call_clipdrop(image_path, target_width, target_height)
+            if upscale_image_bytes is not None:
+                st.download_button(
+                    "Download Upscaled Image",
+                    upscale_image_bytes,
+                    file_name="upscaled_image.jpg",
+                    mime="image/jpeg"
+                )
+            else:
+                st.error("이미지 업스케일링에 실패했습니다.")
