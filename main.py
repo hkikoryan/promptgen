@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 import os
+import re
 from deep_translator import GoogleTranslator  # 수정: deep_translator 추가
 import streamlit as st
 from PIL import Image
@@ -37,22 +38,26 @@ def get_image_type_description(image_type):
     }
     return descriptions.get(image_type, 'image')
 
-# DALL-E 3 API를 호출하여 이미지 생성
-def generate_image_with_dalle(api_key, prompt):
+# DALL-E 3 API를 호출하여 이미지 생성 (수정된 함수)
+def generate_image_with_dalle(api_key, prompt, quality='standard', style='vivid'):
     url = "https://api.openai.com/v1/images/generations"
     headers = {
         "Authorization": f"Bearer {api_key}"
     }
     data = {
         "prompt": prompt,
-        "n": 1  # 생성할 이미지의 수
+        "n": 1,  # 생성할 이미지의 수
+        "model": "dall-e-3",  # 모델 파라미터 추가
+        "quality": quality,  # 퀄리티 파라미터 추가
+        "style": style  # 스타일 파라미터 추가
     }
     response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 200:
+    if response.status_code == 200:  # 여기를 수정
         image_url = response.json()['data'][0]['url']
         return image_url
     else:
         return None
+
 
 # Clipdrop API 호출 함수
 def call_clipdrop(image_path, target_width, target_height):
@@ -72,43 +77,44 @@ def call_clipdrop(image_path, target_width, target_height):
 class StreamHandler(BaseCallbackHandler):
     def __init__(self):
         self.text = ""
+
     def on_llm_new_token(self, token: str, **kwargs) -> None:
-        clean_token = token.replace('\n', ' ').replace('1.', '').replace('2.', '').replace('Scene 1:', '')  # 줄바꿈, 번호, 'Scene 1:' 제거
+        # 불필요한 부분을 제거하는 로직
+        token = re.sub(r'Title:.*?Description:', '', token)
+        token = re.sub(r'Scene \d+:', '', token)
+
+        # 줄바꿈 및 기타 문자 제거 로직
+        clean_token = token.replace('\n', ' ').replace('1.', '').replace('2.', '')
         self.text += clean_token
 
 
 # 번역과 프롬프트 생성
 def get_prompt(category, image_type, season, time_of_day, description, image_ratio=None, include_fixed_part=True):
-    # ChatOpenAI 초기화 (함수 시작 부분으로 이동)
-    stream_handler = StreamHandler()
-    chat_model = ChatOpenAI(streaming=True, callbacks=[stream_handler])
-    season_en = translate_to_english(season)  # 계절 번역
-    category_en = '' if category == '없음' else translate_to_english(category)
-    image_type_en = translate_to_english(image_type)
+    # 번역
+    season_en = translate_to_english(season)
+    category_en = translate_to_english(category) if category != '없음' else ""
     time_of_day_en = translate_to_english(time_of_day)
-    description_en = translate_sentence_to_english(description)  # 문장 번역
-    image_type_description = get_image_type_description(image_type)
-    category_phrase = f"in a {category_en}," if category_en else ""
-    
-    prompt = f"In a {image_type_description} scene during {season_en}, {time_of_day_en} {category_phrase} encapsulate the concept of {description_en}."
-    
-    # image_type에 따른 fixed_part 설정 및 max_tokens 설정
-    max_tokens = 50  # 기본값
-    if image_type == '사진':
-        fixed_part = f"Photo taken by Richard Avedon with Nikon Z6 and an 85mm lens, Award Winning Photography style, Cinematic and Volumetric Lighting, 8K, Ultra-HD, Super-Resolution --ar {image_ratio}"
-    elif image_type == '일러스트':
-        fixed_part = f"in the style of superflat style, light {time_of_day_en}, cinestill 50d, editorial illustrations::2, sleepycore, subtle tonal values, low resolution  --ar {image_ratio}"
-    elif image_type == '3D':
-        fixed_part = f"in the style of 3d::2 graphic --ar {image_ratio}"
-    elif image_type == '아이콘':
-        fixed_part = f"in the style of simple icon::2 --ar {image_ratio}"
-        max_tokens = 20  # 아이콘의 경우에는 더욱 짧게
+    description_en = translate_sentence_to_english(description)
 
-    # 최종 프롬프트 생성
-    if include_fixed_part:
-        final_prompt = f"{prompt} {fixed_part}"
-    else:
-        final_prompt = prompt
+    # 이미지 타입에 따른 설명
+    image_type_description = get_image_type_description(image_type)
+
+    # 프롬프트 구성
+    prompt_elements = [image_type_description, season_en, time_of_day_en, category_en, description_en]
+    prompt = f"{' '.join(filter(None, prompt_elements))}"
+
+    # fixed_part 설정
+    fixed_parts = {
+        '사진': "8K Ultra-HD, Nikon Z6, 85mm lens",
+        '일러스트': "superflat style, low resolution",
+        '3D': "3D rendered graphic style",
+        '아이콘': "flat icon style"
+    }
+    fixed_part = fixed_parts.get(image_type, "") + (f" --ar {image_ratio}" if image_ratio else "")
+
+    # 최종 프롬프트에 fixed_part 포함
+    final_prompt = f"{prompt}. {fixed_part}" if include_fixed_part else prompt
+    return final_prompt
     
     # 결과 얻기
     chat_model.predict(prompt, max_tokens=max_tokens)
@@ -116,9 +122,7 @@ def get_prompt(category, image_type, season, time_of_day, description, image_rat
 
 
 # Streamlit 앱 시작
-st.title('Midjourney Prompter')
-
-
+st.title('Design Generator')
 
 
 # 탭을 추가
@@ -154,19 +158,23 @@ elif tab == "Image Generator":
     # 사용자 입력 레이아웃
     col1, col2, col3,col4 = st.columns(4)
     with col1:
-        category = st.selectbox('Category', ['호텔', '레저', '펜션', '모텔', '항공'])
+        category = st.selectbox('Category', ['공통','호텔', '레저', '펜션', '모텔', '항공'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
         season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])  # 계절 선택 상자 추가
     with col4:
         time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])
+
+    quality = st.selectbox('Quality', ['standard', 'hd'])
+    style = st.selectbox('Style', ['vivid', 'natural'])
     description = st.text_input('원하는 이미지를 묘사해주세요.')
+    
     if st.button('이미지 생성하기'):
         with st.spinner('이미지 생성 중...'):
             prompt = get_prompt(category, image_type, season , time_of_day, description, include_fixed_part=False)
             api_key = os.getenv('OPENAI_API_KEY')  # .env 파일에서 API 키 가져오기
-            image_url = generate_image_with_dalle(api_key, prompt)
+            image_url = generate_image_with_dalle(api_key, prompt, quality, style)
             if image_url:
                 st.write(f"{prompt}")  # 도출된 프롬프트 출력
                 st.image(image_url, caption='Generated Image')  # 생성된 이미지 출력
