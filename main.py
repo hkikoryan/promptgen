@@ -39,7 +39,7 @@ def translate_to_english(text):
     translations = {
         '중간 거리': 'Medium Shot', '와이드 샷': 'Wide Shot, Full shot',
         '항공뷰': 'Top view, High Angle shot', '상반신': 'Upper body shot, Portrait',
-        '클로즈업': 'Close-Up shot',  # 여기에 '클로즈업' 추가
+        '클로즈업': 'Close-Up shot',
         '호텔': 'hotel', '레저': 'leisure', '펜션': 'pension', '모텔': 'motel', '항공': 'plane',
         '사진': 'photo', '일러스트': 'illustration', '3D': '3D', '아이콘': 'icon',
         '새벽': 'dawn', '오전': 'morning', '오후': 'afternoon', '해질녘': 'dusk', '밤': 'night',
@@ -48,9 +48,9 @@ def translate_to_english(text):
     return translations.get(text, text)
 
 
-# 문장을 영어로 번역하는 함수 (수정)
+# 문장을 영어로 번역하는 함수
 def translate_sentence_to_english(text):
-    translator = GoogleTranslator(source='ko', target='en')  # 수정: deep_translator 사용
+    translator = GoogleTranslator(source='ko', target='en')
     translated = translator.translate(text)
     return translated
 
@@ -59,13 +59,14 @@ def translate_sentence_to_english(text):
 def get_image_type_description(image_type):
     descriptions = {
         '사진': 'Cinematic',
-        '일러스트': 'illustration::2',
+        '일러스트': 'Illustration',
         '3D': '3D rendered',
-        '아이콘': 'flat icon, white background'
+        '아이콘': 'Flat icon, white background'
     }
     return descriptions.get(image_type, 'image')
 
-# DALL-E 3 API를 호출하여 이미지 생성 (수정된 함수)
+
+# DALL-E 3 API를 호출하여 이미지 생성
 def generate_image_with_dalle(api_key, prompt, quality='standard', style='vivid'):
     url = "https://api.openai.com/v1/images/generations"
     headers = {
@@ -73,13 +74,13 @@ def generate_image_with_dalle(api_key, prompt, quality='standard', style='vivid'
     }
     data = {
         "prompt": prompt,
-        "n": 1,  # 생성할 이미지의 수
-        "model": "dall-e-3",  # 모델 파라미터 추가
-        "quality": quality,  # 퀄리티 파라미터 추가
-        "style": style  # 스타일 파라미터 추가
+        "n": 1,
+        "model": "dall-e-3",
+        "quality": quality,
+        "style": style
     }
     response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 200:  # 여기를 수정
+    if response.status_code == 200:
         image_url = response.json()['data'][0]['url']
         return image_url
     else:
@@ -89,7 +90,7 @@ def generate_image_with_dalle(api_key, prompt, quality='standard', style='vivid'
 # Clipdrop API 호출 함수
 def call_clipdrop(image_path, target_width, target_height):
     url = "https://clipdrop-api.co/image-upscaling/v1/upscale"
-    headers = {'x-api-key': "CLIPDROP_API_KEY"}
+    headers = {'x-api-key': clipdrop_api_key}
     files = {'image_file': open(image_path, 'rb')}
     data = {'target_width': target_width, 'target_height': target_height}
     response = requests.post(url, headers=headers, files=files, data=data)
@@ -98,9 +99,8 @@ def call_clipdrop(image_path, target_width, target_height):
     else:
         st.error(f"Error: {response.json().get('error', 'Unknown error')}")
         return None
-
-
-# StreamHandler 클래스 정의
+    
+# StreamHandler 클래스 정의    
 class StreamHandler(BaseCallbackHandler):
     def __init__(self):
         self.text = ""
@@ -116,10 +116,10 @@ class StreamHandler(BaseCallbackHandler):
 
 
 # 번역과 프롬프트 생성
-def get_prompt(category, image_type, season, time_of_day, description, image_ratio=None, include_fixed_part=True):
+def get_prompt(composition, image_type, season, time_of_day, description, image_ratio=None, include_fixed_part=True):
     # 번역
     season_en = translate_to_english(season)
-    category_en = translate_to_english(category) if category != '없음' else ""
+    composition_en = translate_to_english(composition) if composition != '없음' else ""
     time_of_day_en = translate_to_english(time_of_day)
     description_en = translate_sentence_to_english(description)
 
@@ -127,91 +127,79 @@ def get_prompt(category, image_type, season, time_of_day, description, image_rat
     image_type_description = get_image_type_description(image_type)
 
     # 추가된 문장 구성요소
-    detailed_description = f"This image should represent a scene where {description_en} during {time_of_day_en} in {season_en}. It should capture the essence of {category_en} in a style that reflects {image_type_description}."
-
+    detailed_description = f"This image should represent a scene where {description_en} during {time_of_day_en} in {season_en}. It should capture the essence of {composition_en} in a style that reflects {image_type_description}."
 
     # 프롬프트 구성
-    prompt_elements = [image_type_description, season_en, time_of_day_en, category_en, description_en]
+    prompt_elements = [image_type_description, season_en, time_of_day_en, composition_en, description_en]
     prompt = f"{' '.join(filter(None, prompt_elements))}"
 
     # fixed_part 설정
     fixed_parts = {
-        '사진': "8K Ultra-HD, Kodak Portra 400, Canon EOS 5D Mark IV --style raw --v 6.0 ",
-        '일러스트': "superflat style, low resolution",
+        '사진': "8K Ultra-HD, Kodak Portra 400, Canon EOS 5D Mark IV --style raw --v 6.0",
+        '일러스트': "Superflat style, low resolution",
         '3D': "3D rendered graphic style",
-        '아이콘': "flat icon style"
+        '아이콘': "Flat icon style"
     }
     fixed_part = fixed_parts.get(image_type, "") + (f" --ar {image_ratio}" if image_ratio else "")
 
     # 최종 프롬프트에 fixed_part 포함
     final_prompt = f"{prompt}. {fixed_part}" if include_fixed_part else prompt
     return final_prompt
-    
-    # 결과 얻기
-    chat_model.predict(prompt, max_tokens=max_tokens)
-    return f"{stream_handler.text} {fixed_part if include_fixed_part else ''}"
 
 
 # Streamlit 앱 시작
 st.title('Design Generator')
 
-
 # 탭을 추가
 tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upscaler"])
 
-
 if tab == "Prompter":
     # 사용자 입력 레이아웃
-    col1, col2, col3, col4, col5 = st.columns(5)  # 컬럼 5개로 변경
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
-        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])  # 'Category'를 'Composition'으로 변경하고 옵션 수정
+        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
-        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])  # 계절 선택 상자 추가
+        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])
     with col4:
-        time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])  # 기존의 컬럼 3에서 컬럼 4로 이동
+        time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])
     with col5:
-        image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4'])  # 기존의 컬럼 4에서 컬럼 5로 이동
+        image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4'])
     description = st.text_input('원하는 이미지를 묘사해주세요.')
     if st.button('프롬프트 생성하기'):
         with st.spinner('프롬프트 생성 중...'):
             final_output = get_prompt(composition, image_type, season, time_of_day, description, image_ratio)
-            # 생성된 프롬프트를 수정할 수 있는 텍스트 입력 상자로 변경
             modified_prompt = st.text_area("생성된 프롬프트:", value=final_output, height=150)
             st.write("수정된 프롬프트를 미드저니에 붙여넣어주세요.")
 
 
 elif tab == "Image Generator":
-    # 사용자 입력 레이아웃
-    col1, col2, col3,col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])  # 'Category'를 'Composition'으로 변경하고 옵션 수정
+        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
-        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])  # 계절 선택 상자 추가
+        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])
     with col4:
         time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])
 
     quality = st.selectbox('Quality', ['standard', 'hd'])
     style = st.selectbox('Style', ['vivid', 'natural'])
-    description = st.text_input('원하는 이미지를 묘사해주세요.')
+    description = st.text_input('Describe the image you want.')
     
-    if st.button('이미지 생성하기'):
-        with st.spinner('이미지 생성 중...'):
-            prompt = get_prompt(category, image_type, season , time_of_day, description, include_fixed_part=False)
+    if st.button('Generate Image'):
+        with st.spinner('Generating image...'):
+            prompt = get_prompt(composition, image_type, season, time_of_day, description, include_fixed_part=False)
             api_key = os.getenv('OPENAI_API_KEY')  # .env 파일에서 API 키 가져오기
             image_url = generate_image_with_dalle(api_key, prompt, quality, style)
             if image_url:
-                st.write(f"{prompt}")  # 도출된 프롬프트 출력
+                st.write(f"Generated Prompt: {prompt}")  # 도출된 프롬프트 출력
                 st.image(image_url, caption='Generated Image')  # 생성된 이미지 출력
             else:
-                st.write('이미지 생성 실패')
+                st.write('Failed to generate image.')
 
-
-
-# 나머지 코드는 동일합니다.
 elif tab == "Upscaler":
     uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
     if uploaded_image is not None:
@@ -222,8 +210,8 @@ elif tab == "Upscaler":
         # 타겟 크기 설정 옵션
         size_option = st.selectbox("Choose the scale factor or input size", ['Custom', '2x', '3x', '4x'])
         if size_option == 'Custom':
-            target_width = st.number_input("Target Width", min_value=1, max_value=4096, value=1024)
-            target_height = st.number_input("Target Height", min_value=1, max_value=4096, value=1024)
+            target_width = st.number_input("Target Width", min_value=1, max_value=4096, value=original_width)
+            target_height = st.number_input("Target Height", min_value=1, max_value=4096, value=original_height)
         else:
             scale_factor = int(size_option.replace('x', ''))
             target_width = original_width * scale_factor
@@ -241,4 +229,4 @@ elif tab == "Upscaler":
                     mime="image/jpeg"
                 )
             else:
-                st.error("이미지 업스케일링에 실패했습니다.")
+                st.error("Failed to upscale the image.")
