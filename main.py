@@ -195,7 +195,7 @@ elif tab == "Image Generator":
             api_key = os.getenv('OPENAI_API_KEY')  # .env 파일에서 API 키 가져오기
             image_url = generate_image_with_dalle(api_key, prompt, quality, style)
             if image_url:
-                st.write(f"Generated Prompt: {prompt}")  # 도출된 프롬프트 출력
+                st.write(f"{prompt}")  # 도출된 프롬프트 출력
                 st.image(image_url, caption='Generated Image')  # 생성된 이미지 출력
             else:
                 st.write('Failed to generate image.')
