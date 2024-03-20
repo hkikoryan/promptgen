@@ -37,13 +37,13 @@ st.markdown("""
 # 간단한 번역 함수
 def translate_to_english(text):
     translations = {
-        '중간 거리': 'Medium Shot', '와이드 샷': 'Wide Shot, Full shot',
-        '항공뷰': 'Top view, High Angle shot', '상반신': 'Upper body shot, Portrait',
-        '클로즈업': 'Close-Up shot',
-        '호텔': 'hotel', '레저': 'leisure', '펜션': 'pension', '모텔': 'motel', '항공': 'plane',
-        '사진': 'photo', '일러스트': 'illustration', '3D': '3D', '아이콘': 'icon',
-        '새벽': 'dawn', '오전': 'morning', '오후': 'afternoon', '해질녘': 'dusk', '밤': 'night',
-        '봄': 'spring', '여름': 'summer', '가을': 'autumn', '겨울': 'winter'
+        '중간 거리': 'Medium Shot,', '와이드 샷': 'Wide Shot, Full shot,',
+        '항공뷰': 'Top view, High Angle shot,', '상반신': 'Upper body shot, Portrait,',
+        '클로즈업': 'Close-Up shot,',
+        '호텔': 'hotel,', '레저': 'leisure,', '펜션': 'pension,', '모텔': 'motel,', '항공': 'plane,',
+        '사진': 'photo,', '일러스트': 'illustration,', '3D': '3D,', '아이콘': 'icon,',
+        '새벽': 'dawn,', '오전': 'mornin,g', '오후': 'afternoon,', '해질녘': 'dusk,', '밤': 'night,',
+        '봄': 'spring,', '여름': 'summer,', '가을': 'autumn,', '겨울': 'winter,'
     }
     return translations.get(text, text)
 
@@ -58,9 +58,9 @@ def translate_sentence_to_english(text):
 # 각 이미지 타입에 대한 설명을 반환하는 함수
 def get_image_type_description(image_type):
     descriptions = {
-        '사진': 'Cinematic',
-        '일러스트': 'Illustration',
-        '3D': '3D rendered',
+        '사진': 'Cinematic,',
+        '일러스트': 'Illustration,',
+        '3D': '3D rendered,',
         '아이콘': 'Flat icon, white background'
     }
     return descriptions.get(image_type, 'image')
@@ -199,6 +199,7 @@ elif tab == "Image Generator":
                 st.image(image_url, caption='Generated Image')  # 생성된 이미지 출력
             else:
                 st.write('Failed to generate image.')
+            
 
 elif tab == "Upscaler":
     uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
