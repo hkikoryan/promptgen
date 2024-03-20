@@ -171,7 +171,7 @@ if tab == "Prompter":
         with st.spinner('프롬프트 생성 중...'):
             final_output = get_prompt(composition, image_type, season, time_of_day, description, image_ratio)
             modified_prompt = st.text_area("생성된 프롬프트:", value=final_output, height=150)
-            st.write("수정된 프롬프트를 미드저니에 붙여넣어주세요.")
+            st.write("생성된 프롬프트를 미드저니에 붙여넣어주세요.")
 
 
 elif tab == "Image Generator":
