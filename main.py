@@ -186,7 +186,7 @@ elif tab == "Image Generator":
     # 사용자 입력 레이아웃
     col1, col2, col3,col4 = st.columns(4)
     with col1:
-        category = st.selectbox('Category', ['공통','호텔', '레저', '펜션', '모텔', '항공'])
+        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])  # 'Category'를 'Composition'으로 변경하고 옵션 수정
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
