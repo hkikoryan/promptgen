@@ -12,15 +12,41 @@ import requests  # Clipdrop API와 DALL-E API 호출을 위해 필요
 openai_api_key = os.getenv("OPENAI_API_KEY")
 clipdrop_api_key = os.getenv("CLIPDROP_API_KEY")
 
+
+# 배경색 설정을 위한 CSS 추가
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #3B455E;
+    }
+     .stButton>button {
+        border: 2px solid #F4588C;
+        border-radius: 10px;  # 버튼의 모서리를 둥글게
+        color: #111111;
+        background-color: #F4588C;
+    }
+    .stButton>button:hover {
+        border: 2px solid #F4588C;
+        color: #F4588C;
+        background-color: transparent;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+
 # 간단한 번역 함수
 def translate_to_english(text):
     translations = {
+        '중간 거리': 'Medium Shot', '와이드 샷': 'Wide Shot, Full shot',
+        '항공뷰': 'Top view, High Angle shot', '상반신': 'Upper body shot, Portrait',
+        '클로즈업': 'Close-Up shot',  # 여기에 '클로즈업' 추가
         '호텔': 'hotel', '레저': 'leisure', '펜션': 'pension', '모텔': 'motel', '항공': 'plane',
         '사진': 'photo', '일러스트': 'illustration', '3D': '3D', '아이콘': 'icon',
         '새벽': 'dawn', '오전': 'morning', '오후': 'afternoon', '해질녘': 'dusk', '밤': 'night',
-        '봄': 'spring', '여름': 'summer', '가을': 'autumn', '겨울': 'winter'  # 계절 번역 추가
+        '봄': 'spring', '여름': 'summer', '가을': 'autumn', '겨울': 'winter'
     }
     return translations.get(text, text)
+
 
 # 문장을 영어로 번역하는 함수 (수정)
 def translate_sentence_to_english(text):
@@ -28,13 +54,14 @@ def translate_sentence_to_english(text):
     translated = translator.translate(text)
     return translated
 
+
 # 각 이미지 타입에 대한 설명을 반환하는 함수
 def get_image_type_description(image_type):
     descriptions = {
-        '사진': 'high quality, realistic photo::2',
-        '일러스트': 'high quality, illustration::2',
+        '사진': 'Cinematic',
+        '일러스트': 'illustration::2',
         '3D': '3D rendered',
-        '아이콘': 'flat icon'
+        '아이콘': 'flat icon, white background'
     }
     return descriptions.get(image_type, 'image')
 
@@ -99,13 +126,17 @@ def get_prompt(category, image_type, season, time_of_day, description, image_rat
     # 이미지 타입에 따른 설명
     image_type_description = get_image_type_description(image_type)
 
+    # 추가된 문장 구성요소
+    detailed_description = f"This image should represent a scene where {description_en} during {time_of_day_en} in {season_en}. It should capture the essence of {category_en} in a style that reflects {image_type_description}."
+
+
     # 프롬프트 구성
     prompt_elements = [image_type_description, season_en, time_of_day_en, category_en, description_en]
     prompt = f"{' '.join(filter(None, prompt_elements))}"
 
     # fixed_part 설정
     fixed_parts = {
-        '사진': "8K Ultra-HD, Nikon Z6, 85mm lens",
+        '사진': "8K Ultra-HD, Kodak Portra 400, Canon EOS 5D Mark IV --style raw --v 6.0 ",
         '일러스트': "superflat style, low resolution",
         '3D': "3D rendered graphic style",
         '아이콘': "flat icon style"
@@ -133,7 +164,7 @@ if tab == "Prompter":
     # 사용자 입력 레이아웃
     col1, col2, col3, col4, col5 = st.columns(5)  # 컬럼 5개로 변경
     with col1:
-        category = st.selectbox('Category', ['없음', '호텔', '펜션', '레저', '모텔' , '항공'])
+        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])  # 'Category'를 'Composition'으로 변경하고 옵션 수정
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
     with col3:
@@ -142,16 +173,13 @@ if tab == "Prompter":
         time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])  # 기존의 컬럼 3에서 컬럼 4로 이동
     with col5:
         image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4'])  # 기존의 컬럼 4에서 컬럼 5로 이동
-        
     description = st.text_input('원하는 이미지를 묘사해주세요.')
     if st.button('프롬프트 생성하기'):
         with st.spinner('프롬프트 생성 중...'):
-            # get_prompt 함수 호출 시 season도 인수로 전달
-            final_output = get_prompt(category, image_type, season, time_of_day, description, image_ratio)
-            st.write(final_output)  # final_output만 출력
-            st.write("해당 프롬프트를 미드저니에 붙여넣어주세요.")  # 추가된 메시지
-
-
+            final_output = get_prompt(composition, image_type, season, time_of_day, description, image_ratio)
+            # 생성된 프롬프트를 수정할 수 있는 텍스트 입력 상자로 변경
+            modified_prompt = st.text_area("생성된 프롬프트:", value=final_output, height=150)
+            st.write("수정된 프롬프트를 미드저니에 붙여넣어주세요.")
 
 
 elif tab == "Image Generator":
