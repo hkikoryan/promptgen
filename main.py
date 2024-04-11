@@ -151,9 +151,9 @@ def get_prompt(composition, image_type, season, time_of_day, description, image_
 st.title('Design Generator')
 
 # 탭을 추가
-tab = st.selectbox("Choose a tab", ["Prompter", "Image Generator", "Upscaler"])
+tab = st.selectbox("Choose a tab", ["Prompter (Midjourney)", "Image Generator", "Upscaler"])
 
-if tab == "Prompter":
+if tab == "Prompter (Midjourney)":
     # 사용자 입력 레이아웃
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
