@@ -90,7 +90,7 @@ def generate_image_with_dalle(api_key, prompt, quality='standard', style='vivid'
 # Clipdrop API 호출 함수
 def call_clipdrop(image_path, target_width, target_height):
     url = "https://clipdrop-api.co/image-upscaling/v1/upscale"
-    headers = {'x-api-key': clipdrop_api_key}
+    headers = {'x-api-key': "9114aa67c0fa31e75f7a1d5312172bc807fcc617b4be832c5e22c20f63053370842e202c0a1bc82204c812899639d7f8"}
     files = {'image_file': open(image_path, 'rb')}
     data = {'target_width': target_width, 'target_height': target_height}
     response = requests.post(url, headers=headers, files=files, data=data)
