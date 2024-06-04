@@ -7,7 +7,7 @@ import streamlit as st
 from PIL import Image
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
-import requests  # Clipdrop API와 DALL-E API 호출을 위해 
+import requests  # Clipdrop API와 DALL-E API  
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
 clipdrop_api_key = os.getenv("CLIPDROP_API_KEY")
@@ -17,7 +17,7 @@ clipdrop_api_key = os.getenv("CLIPDROP_API_KEY")
 st.markdown("""
     <style>
     .stApp {
-        background-color: #3B455E;
+        background-color: #3B455E;s
     }
      .stButton>button {
         border: 2px solid #F4588C;
