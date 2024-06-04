@@ -7,7 +7,7 @@ import streamlit as st
 from PIL import Image
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
-import requests  # Clipdrop API와 DALL-E API 호출을 위해 필요
+import requests  # Clipdrop API와 DALL-E API 호출을 위해 
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
 clipdrop_api_key = os.getenv("CLIPDROP_API_KEY")
