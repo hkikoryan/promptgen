@@ -1,7 +1,0 @@
-langchain
-openai
-streamlit
-python-dotenv
-requests
-googletrans
-deep-translator
