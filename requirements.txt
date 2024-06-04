@@ -5,3 +5,4 @@ python-dotenv
 requests
 googletrans
 deep-translator
+langchain_community
