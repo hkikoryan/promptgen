@@ -147,7 +147,7 @@ def get_prompt(composition, image_type, season, time_of_day, description, image_
 
 
 # Streamlit 앱 시작
-st.title('Image Generator')
+st.title('Prompt Generator')
 
 # 탭을 추가
 tab = st.selectbox("Choose a tab", ["Prompter (Midjourney)"])
