@@ -147,10 +147,10 @@ def get_prompt(composition, image_type, season, time_of_day, description, image_
 
 
 # Streamlit 앱 시작
-st.title('Design Generator')
+st.title('Image Generator')
 
 # 탭을 추가
-tab = st.selectbox("Choose a tab", ["Prompter (Midjourney)", "Image Generator", "Upscaler"])
+tab = st.selectbox("Choose a tab", ["Prompter (Midjourney)"])
 
 if tab == "Prompter (Midjourney)":
     # 사용자 입력 레이아웃
