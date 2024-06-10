@@ -156,7 +156,7 @@ if tab == "Prompter (Midjourney)":
     # 사용자 입력 레이아웃
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
-        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])
+        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '클로즈업'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트'])
     with col3:
@@ -176,7 +176,7 @@ if tab == "Prompter (Midjourney)":
 elif tab == "Image Generator":
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])
+        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '클로즈업'])
     with col2:
         image_type = st.selectbox('Style', ['사진', '일러스트'])
     with col3:
