@@ -137,8 +137,7 @@ def get_prompt(composition, image_type, season, time_of_day, description, image_
     fixed_parts = {
         '사진': "8K Ultra-HD, Kodak Portra 400, Canon EOS 5D Mark IV --style raw --v 6.0",
         '일러스트': "Superflat style, low resolution",
-        '3D': "3D rendered graphic style",
-        '아이콘': "Flat icon style"
+    
     }
     fixed_part = fixed_parts.get(image_type, "") + (f" --ar {image_ratio}" if image_ratio else "")
 
@@ -159,7 +158,7 @@ if tab == "Prompter (Midjourney)":
     with col1:
         composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])
     with col2:
-        image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
+        image_type = st.selectbox('Style', ['사진', '일러스트'])
     with col3:
         season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])
     with col4:
@@ -179,7 +178,7 @@ elif tab == "Image Generator":
     with col1:
         composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])
     with col2:
-        image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
+        image_type = st.selectbox('Style', ['사진', '일러스트'])
     with col3:
         season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])
     with col4:
