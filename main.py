@@ -237,7 +237,7 @@ if 'prompts' not in st.session_state:
     st.session_state['prompts'] = []
 
 # 탭을 추가
-tab = st.selectbox("Choose a tab", ["Prompter (Midjourney)", "Image Generator", "Upscaler"])
+tab = st.selectbox("Choose a tab", ["Prompter (Midjourney)"])
 
 if tab == "Prompter (Midjourney)":
     # 일반 설정
