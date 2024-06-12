@@ -273,11 +273,11 @@ if tab == "Prompter (Midjourney)":
             with camera_tooltip:
                 st.markdown("""
                 <div class="tooltip">💡
-                    <span class="tooltiptext">Canon EOS R5 : 건물 <br> Sony a7R IV : 풍경</span>
+                    <span class="tooltiptext">Canon EOS R5 : 건물 <br> Sony Alpha a7 III  : 풍경</span>
                 </div>
                 """, unsafe_allow_html=True)
             if include_camera:
-                camera = st.selectbox('Camera', ['Canon EOS R5 with a 200mm lens', 'Sony a7R IV and a 70mm lens'])
+                camera = st.selectbox('Camera', ['Canon EOS R5 with a 200mm lens', 'Sony Alpha a7 III'])
         with col10:
             face_model_checkbox, face_model_tooltip = st.columns([0.8, 0.2])
             with face_model_checkbox:
