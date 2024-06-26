@@ -1,5 +1,3 @@
-
-
 from dotenv import load_dotenv
 load_dotenv()
 import os
@@ -10,6 +8,10 @@ from PIL import Image
 from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
 import requests
+# from streamlit_auth import login, callback  # Google 로그인 및 인증 관련 코드 숨김
+
+
+
 
 st.set_page_config(
     page_title="Prompt Generator",
@@ -21,13 +23,24 @@ st.set_page_config(
 openai_api_key = os.getenv("OPENAI_API_KEY")
 clipdrop_api_key = os.getenv("CLIPDROP_API_KEY")
 
+# Google 로그인 및 인증 관련 코드 숨김
+# if 'user' not in st.session_state:
+#     if 'code' in st.query_params:
+#         callback()
+#     else:
+#         login()
+#     st.stop()  # 로그인 후에만 아래 코드가 실행되도록 함
+# else:
+#     user_info = st.session_state['user']
+#     st.write(f"Hello, {user_info['name']} ({user_info['email']})")
+
+
 # 배경색 설정을 위한 CSS 추가
 st.markdown("""
     <style>
      Header {visibility: hidden;}
      footer {visibility: hidden;}
-
-
+              
     .stApp {
         background-color: #0e1117;
     }
@@ -78,6 +91,7 @@ st.markdown("""
 
 
 
+
 # 간단한 번역 함수
 def translate_to_english(text):
     translations = {
@@ -115,6 +129,7 @@ def create_and_store_prompt(style, season, time_of_day, weather, subject, image_
     # 프롬프트 리스트에 저장
     st.session_state['prompts'].insert(0, final_output)
 
+
 # 프롬프트 생성 버튼 이벤트 처리
 def handle_create_prompt():
     with st.spinner('프롬프트 생성 중...'):
@@ -126,38 +141,6 @@ def handle_create_prompt():
             FaceModel if include_FaceModel else None
         )
 
-# DALL-E 3 API를 호출하여 이미지 생성
-def generate_image_with_dalle(api_key, prompt, quality='standard', style='vivid'):
-    url = "https://api.openai.com/v1/images/generations"
-    headers = {
-        "Authorization": f"Bearer {api_key}"
-    }
-    data = {
-        "prompt": prompt,
-        "n": 1,
-        "model": "dall-e-3",
-        "quality": quality,
-        "style": style
-    }
-    response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 200:
-        image_url = response.json()['data'][0]['url']
-        return image_url
-    else:
-        return None
-
-# Clipdrop API 호출 함수
-def call_clipdrop(image_path, target_width, target_height):
-    url = "https://clipdrop-api.co/image-upscaling/v1/upscale"
-    headers = {'x-api-key': clipdrop_api_key}
-    files = {'image_file': open(image_path, 'rb')}
-    data = {'target_width': target_width, 'target_height': target_height}
-    response = requests.post(url, headers=headers, files=files, data=data)
-    if response.status_code == 200:
-        return response.content
-    else:
-        st.error(f"Error: {response.json().get('error', 'Unknown error')}")
-        return None
     
 # StreamHandler 클래스 정의    
 class StreamHandler(BaseCallbackHandler):
@@ -170,52 +153,48 @@ class StreamHandler(BaseCallbackHandler):
         clean_token = token.replace('\n', ' ').replace('1.', '').replace('2.', '')
         self.text += clean_token
 
+# 프롬프트 생성 함수
 def get_prompt(style, season, time_of_day, weather, subject, image_ratio, description, composition=None, camera_view=None, camera=None, FaceModel=None):
-     # 번역
-    season_en = translate_to_english(season)
-    time_of_day_en = translate_to_english(time_of_day)
-    weather_en = translate_to_english(weather)
-    subject_en = translate_to_english(subject)
+    season_en = translate_to_english(season) if season != '선택' else ""
+    time_of_day_en = translate_to_english(time_of_day) if time_of_day != '선택' else ""
+    weather_en = translate_to_english(weather) if weather != '선택' else ""
+    subject_en = translate_to_english(subject) if subject != '선택' else ""
     description_en = translate_sentence_to_english(description)
     style_description = get_image_type_description(style)
 
-    # 옵셔널 매개변수 번역 및 설정
     composition_en = translate_to_english(composition) if composition else ""
     camera_view_en = translate_to_english(camera_view) if camera_view else ""
 
-    # FaceModel에 따른 텍스트 추가
     face_model_text = ""
     if FaceModel == '아라':
         face_model_text = "a beautiful woman,"
     elif FaceModel == '국인':
         face_model_text = "a handsome man,"
 
-    # 프롬프트 구성
     prompt_elements = [
-        composition_en if composition_en else "", 
-        camera_view_en if camera_view_en else "", 
+        composition_en, 
+        camera_view_en, 
         style_description, 
         season_en, 
         time_of_day_en, 
         weather_en, 
         subject_en, 
-        f"{description_en},"  # Description 뒤에 쉼표 추가
+        f"{description_en},"
     ]
-    
-    # 고정된 파트가 필요한 경우 설정
+
+    prompt_elements = [element for element in prompt_elements if element]
+
+    camera_info = "Nikon Z7 and a 50mm prime lens"
     if style == '사진' and camera:
-        camera_info = camera  # 고급 설정에서 선택한 카메라 사용
-    else:
-        camera_info = "Nikon Z7 and a 50mm prime lens"
+        camera_info = camera
 
     fixed_parts = {
         '사진': f"{camera_info}, --style raw --v 6.0",
         '일러스트': "Superflat style, low resolution --niji 6",
-        '3D': "3D rendered graphic style",
+        '3D': " white background with a 3D isometric view render in C4D using soft studio lighting at a high resolution and simple design",
         '아이콘': "Flat icon style, simple design"
     }
-    
-    # FaceModel 설정에 따라 추가 요소 삽입
+
     face_model_part = ""
     if FaceModel == '아라':
         face_model_part = "--cref https://s.mj.run/USpeH9WeCx8 --cw 0"
@@ -223,11 +202,9 @@ def get_prompt(style, season, time_of_day, weather, subject, image_ratio, descri
         face_model_part = "--cref https://s.mj.run/PCbQjomU9q8 --cw 0"
 
     fixed_part = fixed_parts.get(style, "") + (f" --ar {image_ratio}" if image_ratio else "")
-    
-    # 요소들을 연결하여 최종 프롬프트 생성
+
     final_prompt = f"{face_model_text} " + " ".join(filter(None, prompt_elements)) + " " + fixed_part + " " + face_model_part
     return final_prompt
-
 
 # Streamlit 앱 시작
 st.title('Prompt Generator')
@@ -236,24 +213,26 @@ st.title('Prompt Generator')
 if 'prompts' not in st.session_state:
     st.session_state['prompts'] = []
 
-# 탭을 추가
+
+# 일반 설정
 tab = st.selectbox("Choose a tab", ["Prompter (Midjourney)"])
 
 if tab == "Prompter (Midjourney)":
-    # 일반 설정
     col1, col2, col3, col4, col5, col6 = st.columns(6)
     with col1:
         style = st.selectbox('Style', ['사진', '일러스트', '아이콘', '3D'])
     with col2:
-        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])
+        season = st.selectbox('Season', ['선택', '봄', '여름', '가을', '겨울'])
     with col3:
-        time_of_day = st.selectbox('Time', ['새벽', '일출', '오전', '정오', '오후', '해질녘', '밤'])
+        time_of_day = st.selectbox('Time', ['선택', '새벽', '일출', '오전', '정오', '오후', '해질녘', '밤'])
     with col4:
-        weather = st.selectbox('Weather', ['맑음', '비', '눈', '흐림'])
+        weather = st.selectbox('Weather', ['선택', '맑음', '비', '눈', '흐림'])
     with col5:
-        subject = st.selectbox('Subject', ['사람', '동물', '캐릭터', '장소', '객체'])
+        subject = st.selectbox('Subject', ['선택', '사람', '동물', '캐릭터', '장소', '객체'])
     with col6:
         image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4', '3:1'])
+
+
 
     # 고급 설정
     with st.expander("Advanced Settings"):
@@ -308,57 +287,17 @@ if tab == "Prompter (Midjourney)":
 
 
 
-elif tab == "Image Generator":
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])
-    with col2:
-        image_type = st.selectbox('Style', ['사진', '일러스트', '3D', '아이콘'])
-    with col3:
-        season = st.selectbox('Season', ['봄', '여름', '가을', '겨울'])
-    with col4:
-        time_of_day = st.selectbox('Time', ['새벽', '오전', '오후', '해질녘', '밤'])
 
-    quality = st.selectbox('Quality', ['standard', 'hd'])
-    style = st.selectbox('Style', ['vivid', 'natural'])
-    description = st.text_input('Describe the image you want.')
-    
-    if st.button('Generate Image'):
-        with st.spinner('Generating image...'):
-            prompt = get_prompt(composition, image_type, season, time_of_day, description, include_fixed_part=False)
-            api_key = os.getenv('OPENAI_API_KEY')
-            image_url = generate_image_with_dalle(api_key, prompt, quality, style)
-            if image_url:
-                st.write(f"{prompt}")
-                st.image(image_url, caption='Generated Image')
-            else:
-                st.write('Failed to generate image.')
 
-elif tab == "Upscaler":
-    uploaded_image = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-    if uploaded_image is not None:
-        original_image = Image.open(uploaded_image)
-        original_width, original_height = original_image.size
-        st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
-        size_option = st.selectbox("Choose the scale factor or input size", ['Custom', '2x', '3x', '4x'])
-        if size_option == 'Custom':
-            target_width = st.number_input("Target Width", min_value=1, max_value=4096, value=original_width)
-            target_height = st.number_input("Target Height", min_value=1, max_value=4096, value=original_height)
-        else:
-            scale_factor = int(size_option.replace('x', ''))
-            target_width = original_width * scale_factor
-            target_height = original_height * scale_factor
-        if st.button("Upscale Image"):
-            image_path = "/tmp/uploaded_image_to_upscale.jpg"
-            with open(image_path, "wb") as f:
-                f.write(uploaded_image.getbuffer())
-            upscale_image_bytes = call_clipdrop(image_path, target_width, target_height)
-            if upscale_image_bytes is not None:
-                st.download_button(
-                    "Download Upscaled Image",
-                    upscale_image_bytes,
-                    file_name="upscaled_image.jpg",
-                    mime="image/jpeg"
-                )
-            else:
-                st.error("Failed to upscale the image.")
+
+
+
+
+
+
+
+
+
+
+
+
