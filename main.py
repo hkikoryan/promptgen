@@ -90,8 +90,6 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 
-
-
 # 간단한 번역 함수
 def translate_to_english(text):
     translations = {
@@ -108,6 +106,68 @@ def translate_to_english(text):
     }
     return translations.get(text, text)
 
+
+# 금지된 단어 목록
+banned_words = [
+    # Gore Words
+    "Blood", "Bloodbath", "Crucifixion", "Bloody", "Flesh", "Bruises", "Car crash", "Corpse", 
+    "Crucified", "Cutting", "Decapitate", "Infested", "Gruesome", "Kill", "Infected", "Sadist", 
+    "Slaughter", "Teratoma", "Tryphophobia", "Wound", "Cronenberg", "Khorne", "Cannibal", 
+    "Cannibalism", "Visceral", "Guts", "Bloodshot", "Gory", "Killing", "Surgery", "Vivisection", 
+    "Massacre", "Hemoglobin", "Suicide", "Female Body Parts",
+    # Adult Words
+    "ahegao", "pinup", "ballgag", "Playboy", "Bimbo", "pleasure", "pleasures", "boudoir", 
+    "rule34", "brothel", "seducing", "dominatrix", "seductive", "erotic", "fuck", "sensual", 
+    "Hardcore", "sexy", "Hentai", "Shag", "horny", "shibari", "incest", "Smut", "jav", 
+    "succubus", "thot", "kinbaku", "legs spread", "twerk", "making love", 
+    "voluptuous", "naughty", "wincest", "orgy", "Sultry", "XXX", "Bondage", "Bdsm", "Dog collar", 
+    "Slavegirl", "invisible clothes", "wearing nothing", "lingerie", "negligee", "zero clothes",
+    # Body Parts Words
+    "Arse", "Labia", "Ass", "Mammaries", "Human centipede", "Badonkers", "Minge", "Massive chests", 
+    "Big Ass", "Mommy Milker", "Booba", "Nipple", "Booty", "Oppai", "Bosom", "Breasts", "Ovaries", 
+    "Busty", "Penis", "Clunge", "Phallus", "Crotch", "sexy female", "Dick", "Skimpy", "Girth", 
+    "Thick", "Honkers", "Vagina", "Hooters", "Veiny", "Knob",
+    # Clothing Words
+    "no clothes", "Speedo", "au naturale", "no shirt", "bare chest", "nude", "barely dressed", 
+    "bra", "risqué", "clear", "scantily", "clad", "cleavage", "stripped", "full frontal unclothed", 
+    "naked", "without clothes on",
+    # Taboo Words
+    "Taboo", "Fascist", "Nazi", "Prophet Mohammed", "Slave", "Coon", "Honkey", "Arrested", "Jail", 
+    "Handcuffs",
+    # Drugs Words
+    "Drugs", "Cocaine", "Heroin", "Meth", "Crack",
+    # Other
+    "Torture", "Disturbing", "Farts", "Fart", "Poop", "Warts", "Xi Jinping", "Shit", "Pleasure", 
+    "Errect", "Big Black", "Brown pudding", "Bunghole", "Vomit", "Voluptuous", "Seductive", "Sperm", 
+    "Hot", "Sexy", "Sensored", "Censored", "Silenced", "Deepfake", "Inappropriate", "Pus", "Waifu", 
+    "mp5", "Succubus", "1488", "Surgery", "Rape"
+]
+# 금지된 단어 필터링 함수
+
+# 문맥에서 허용될 수 있는 단어 목록
+contextual_allowances = {
+    "clear": ["clear sky", "clear weather", "clear water"]
+}
+
+# 금지된 단어 필터링 함수
+def filter_banned_words(prompt):
+    for word in banned_words:
+        # 문맥 허용 조건을 확인
+        if word in contextual_allowances:
+            allowed_contexts = contextual_allowances[word]
+            # 문맥 허용 조건에 해당하는지 확인
+            for context in allowed_contexts:
+                if context in prompt.lower():
+                    break
+            else:
+                # 문맥 허용 조건에 해당하지 않으면 "*****"로 대체
+                prompt = re.sub(rf"\b{word}\b", "*****", prompt, flags=re.IGNORECASE)
+        else:
+            # 문맥 허용 조건이 없는 단어는 "*****"로 대체
+            prompt = re.sub(rf"\b{word}\b", "*****", prompt, flags=re.IGNORECASE)
+    return prompt
+
+
 # 각 이미지 타입에 대한 설명을 반환하는 함수
 def get_image_type_description(style):
     descriptions = {
@@ -120,6 +180,8 @@ def get_image_type_description(style):
 def translate_sentence_to_english(text):
     translator = GoogleTranslator(source='ko', target='en')
     translated = translator.translate(text)
+    # 번역된 문장에서 금지된 단어 필터링
+    translated = filter_banned_words(translated)
     return translated
 
 # 프롬프트 생성 및 저장
@@ -140,7 +202,6 @@ def handle_create_prompt():
             camera if include_camera else None,
             FaceModel if include_FaceModel else None
         )
-
     
 # StreamHandler 클래스 정의    
 class StreamHandler(BaseCallbackHandler):
@@ -155,10 +216,10 @@ class StreamHandler(BaseCallbackHandler):
 
 # 프롬프트 생성 함수
 def get_prompt(style, season, time_of_day, weather, subject, image_ratio, description, composition=None, camera_view=None, camera=None, FaceModel=None):
-    season_en = translate_to_english(season) if season != '선택' else ""
-    time_of_day_en = translate_to_english(time_of_day) if time_of_day != '선택' else ""
-    weather_en = translate_to_english(weather) if weather != '선택' else ""
-    subject_en = translate_to_english(subject) if subject != '선택' else ""
+    season_en = translate_to_english(season) if season != '(선택)' else ""
+    time_of_day_en = translate_to_english(time_of_day) if time_of_day != '(선택)' else ""
+    weather_en = translate_to_english(weather) if weather != '(선택)' else ""
+    subject_en = translate_to_english(subject) if subject != '(선택)' else ""
     description_en = translate_sentence_to_english(description)
     style_description = get_image_type_description(style)
 
@@ -204,6 +265,10 @@ def get_prompt(style, season, time_of_day, weather, subject, image_ratio, descri
     fixed_part = fixed_parts.get(style, "") + (f" --ar {image_ratio}" if image_ratio else "")
 
     final_prompt = f"{face_model_text} " + " ".join(filter(None, prompt_elements)) + " " + fixed_part + " " + face_model_part
+    
+  # 금지된 단어 필터링 추가
+    final_prompt = filter_banned_words(final_prompt)
+    
     return final_prompt
 
 # Streamlit 앱 시작
@@ -222,17 +287,15 @@ if tab == "Prompter (Midjourney)":
     with col1:
         style = st.selectbox('Style', ['사진', '일러스트', '아이콘', '3D'])
     with col2:
-        season = st.selectbox('Season', ['선택', '봄', '여름', '가을', '겨울'])
+        season = st.selectbox('Season', ['(선택)', '봄', '여름', '가을', '겨울'])
     with col3:
-        time_of_day = st.selectbox('Time', ['선택', '새벽', '일출', '오전', '정오', '오후', '해질녘', '밤'])
+        time_of_day = st.selectbox('Time', ['(선택)', '새벽', '일출', '오전', '정오', '오후', '해질녘', '밤'])
     with col4:
-        weather = st.selectbox('Weather', ['선택', '맑음', '비', '눈', '흐림'])
+        weather = st.selectbox('Weather', ['(선택)', '맑음', '비', '눈', '흐림'])
     with col5:
-        subject = st.selectbox('Subject', ['선택', '사람', '동물', '캐릭터', '장소', '객체'])
+        subject = st.selectbox('Subject', ['(선택)', '사람', '동물', '캐릭터', '장소', '객체'])
     with col6:
         image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4', '3:1'])
-
-
 
     # 고급 설정
     with st.expander("Advanced Settings"):
