@@ -5,12 +5,10 @@ import re
 from deep_translator import GoogleTranslator
 import streamlit as st
 from PIL import Image
-from langchain.chat_models import ChatOpenAI
+#from langchain.chat_models import ChatOpenAI
 from langchain.callbacks.base import BaseCallbackHandler
 import requests
 # from streamlit_auth import login, callback  # Google 로그인 및 인증 관련 코드 숨김
-
-
 
 
 st.set_page_config(
@@ -86,9 +84,10 @@ st.markdown("""
     .tooltip:hover .tooltiptext {
         visibility: visible;
     }
+        
+            
     </style>
     """, unsafe_allow_html=True)
-
 
 # 간단한 번역 함수
 def translate_to_english(text):
@@ -104,6 +103,11 @@ def translate_to_english(text):
         '동물': 'animal,', '캐릭터': 'character,', '장소': 'location,', '객체': 'object,',
         '정면': 'front view,', '측면': 'side view, looking at side', '후면': 'back view, looking at behind,'
     }
+
+     # 특별 처리 단어
+    if text == '유채꽃':
+        return 'canola flower,'
+    
     return translations.get(text, text)
 
 
@@ -178,25 +182,30 @@ def get_image_type_description(style):
 
 # 문장을 영어로 번역하는 함수
 def translate_sentence_to_english(text):
+    # '유채꽃'을 'canola flower'로 변환
+    text = text.replace('유채꽃', 'canola flower')
+    
     translator = GoogleTranslator(source='ko', target='en')
     translated = translator.translate(text)
+    
     # 번역된 문장에서 금지된 단어 필터링
     translated = filter_banned_words(translated)
     return translated
 
+
 # 프롬프트 생성 및 저장
-def create_and_store_prompt(style, season, time_of_day, weather, subject, image_ratio, description, composition, camera_view, camera, FaceModel):
+def create_and_store_prompt(style, season, time_of_day, weather, image_ratio, description, person, composition, camera_view, camera, FaceModel):
     # 프롬프트 생성
-    final_output = get_prompt(style, season, time_of_day, weather, subject, image_ratio, description, composition, camera_view, camera, FaceModel)
+    final_output = get_prompt(style, season, time_of_day, weather, image_ratio, description, person, composition, camera_view, camera, FaceModel)
     # 프롬프트 리스트에 저장
     st.session_state['prompts'].insert(0, final_output)
-
 
 # 프롬프트 생성 버튼 이벤트 처리
 def handle_create_prompt():
     with st.spinner('프롬프트 생성 중...'):
         create_and_store_prompt(
-            style, season, time_of_day, weather, subject, image_ratio, description,
+            style, season, time_of_day, weather, image_ratio, description,
+            person if include_person else None,
             composition if include_composition else None,
             camera_view if include_camera_view else None,
             camera if include_camera else None,
@@ -214,17 +223,16 @@ class StreamHandler(BaseCallbackHandler):
         clean_token = token.replace('\n', ' ').replace('1.', '').replace('2.', '')
         self.text += clean_token
 
-# 프롬프트 생성 함수
-def get_prompt(style, season, time_of_day, weather, subject, image_ratio, description, composition=None, camera_view=None, camera=None, FaceModel=None):
+def get_prompt(style, season, time_of_day, weather, image_ratio, description, person=None, composition=None, camera_view=None, camera=None, FaceModel=None):
     season_en = translate_to_english(season) if season != '(선택)' else ""
     time_of_day_en = translate_to_english(time_of_day) if time_of_day != '(선택)' else ""
     weather_en = translate_to_english(weather) if weather != '(선택)' else ""
-    subject_en = translate_to_english(subject) if subject != '(선택)' else ""
     description_en = translate_sentence_to_english(description)
     style_description = get_image_type_description(style)
 
     composition_en = translate_to_english(composition) if composition else ""
     camera_view_en = translate_to_english(camera_view) if camera_view else ""
+    person_en = f"korean {person}," if person else ""
 
     face_model_text = ""
     if FaceModel == '아라':
@@ -239,7 +247,7 @@ def get_prompt(style, season, time_of_day, weather, subject, image_ratio, descri
         season_en, 
         time_of_day_en, 
         weather_en, 
-        subject_en, 
+        person_en,
         f"{description_en},"
     ]
 
@@ -266,7 +274,7 @@ def get_prompt(style, season, time_of_day, weather, subject, image_ratio, descri
 
     final_prompt = f"{face_model_text} " + " ".join(filter(None, prompt_elements)) + " " + fixed_part + " " + face_model_part
     
-  # 금지된 단어 필터링 추가
+    # 금지된 단어 필터링 추가
     final_prompt = filter_banned_words(final_prompt)
     
     return final_prompt
@@ -283,7 +291,7 @@ if 'prompts' not in st.session_state:
 tab = st.selectbox("Choose a tab", ["Prompter (Midjourney)"])
 
 if tab == "Prompter (Midjourney)":
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         style = st.selectbox('Style', ['사진', '일러스트', '아이콘', '3D'])
     with col2:
@@ -293,34 +301,42 @@ if tab == "Prompter (Midjourney)":
     with col4:
         weather = st.selectbox('Weather', ['(선택)', '맑음', '비', '눈', '흐림'])
     with col5:
-        subject = st.selectbox('Subject', ['(선택)', '사람', '동물', '캐릭터', '장소', '객체'])
-    with col6:
-        image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4', '3:1'])
+        image_ratio = st.selectbox('Ratio', ['1:1', '9:16', '16:9', '3:4', '3:1', '직접입력'])
+
+    # 직접 입력 옵션이 선택되었을 때
+    if image_ratio == '직접입력':
+        custom_ratio = st.text_input('직접 비율 입력 (예: 2:3)')
+        if custom_ratio:
+            image_ratio = custom_ratio
 
     # 고급 설정
     with st.expander("Advanced Settings"):
-        col7, col8, col9, col10 = st.columns(4)
-        with col7:
+         col7, col8, col9, col10, col11 = st.columns(5)
+    with col7:
+            include_person = st.checkbox("Person")
+            if include_person:
+                person = st.selectbox('Person', ['Solo', 'Couple', 'Friend', 'Family'])
+    with col8:
             include_composition = st.checkbox("Composition")
             if include_composition:
                 composition = st.selectbox('Composition', ['중간 거리', '와이드 샷', '항공뷰', '상반신', '클로즈업'])
-        with col8:
+    with col9:
             include_camera_view = st.checkbox("Camera View")
             if include_camera_view:
                 camera_view = st.selectbox('Camera View', ['정면', '측면', '후면'])
-        with col9:
+    with col10:
             camera_checkbox, camera_tooltip = st.columns([0.8, 0.2])
             with camera_checkbox:
                 include_camera = st.checkbox("Camera")
             with camera_tooltip:
-                st.markdown("""
-                <div class="tooltip">💡
-                    <span class="tooltiptext">Canon EOS R5 : 건물 <br> Sony Alpha a7 III  : 풍경</span>
-                </div>
-                """, unsafe_allow_html=True)
+                        st.markdown("""
+                        <div class="tooltip">💡
+                            <span class="tooltiptext">Canon EOS R5 : 건물 <br> Sony Alpha a7 III  : 풍경</span>
+                        </div>
+                        """, unsafe_allow_html=True)
             if include_camera:
-                camera = st.selectbox('Camera', ['Canon EOS R5 with a 200mm lens', 'Sony Alpha a7 III'])
-        with col10:
+                        camera = st.selectbox('Camera', ['Canon EOS R5 with a 200mm lens', 'Sony Alpha a7 III'])
+    with col11:
             face_model_checkbox, face_model_tooltip = st.columns([0.8, 0.2])
             with face_model_checkbox:
                 include_FaceModel = st.checkbox("FaceModel")
@@ -344,7 +360,7 @@ if tab == "Prompter (Midjourney)":
 """, unsafe_allow_html=True)
     for idx, prompt in enumerate(st.session_state['prompts']):
         st.text_area(f"Prompt {idx+1}", value=prompt, height=150, key=f"Prompt{idx}")
-        
+
 
 
 
