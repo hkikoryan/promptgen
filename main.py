@@ -258,7 +258,7 @@ def get_prompt(style, season, time_of_day, weather, image_ratio, description, pe
         camera_info = camera
 
     fixed_parts = {
-        '사진': f"{camera_info}, --style raw --v 6.0",
+        '사진': f"{camera_info}, --style raw --v 6.1",
         '일러스트': "Superflat style, low resolution --niji 6",
         '3D': " white background with a 3D isometric view render in C4D using soft studio lighting at a high resolution and simple design",
         '아이콘': "Flat icon style, simple design"
