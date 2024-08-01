@@ -175,7 +175,7 @@ def filter_banned_words(prompt):
 # 각 이미지 타입에 대한 설명을 반환하는 함수
 def get_image_type_description(style):
     descriptions = {
-        '사진': 'hyper realistic,', '일러스트': 'Illustration,', '3D': '3D rendered,',
+        '사진': 'hyper realistic,', '일러스트': 'Illustration,', '3D': '3D rendered, in the style of blender,',
         '아이콘': 'Flat icon, white background,'
     }
     return descriptions.get(style, 'image')
@@ -260,8 +260,8 @@ def get_prompt(style, season, time_of_day, weather, image_ratio, description, pe
     fixed_parts = {
         '사진': f"{camera_info}, --style raw --v 6.1",
         '일러스트': "Superflat style, low resolution --niji 6",
-        '3D': " white background with a 3D isometric view render in C4D using soft studio lighting at a high resolution and simple design",
-        '아이콘': "Flat icon style, simple design"
+        '3D': " white background with a 3D isometric view render in C4D using soft studio lighting at a high resolution and simple design,  in the style of blender,  --v 6.1 ",
+        '아이콘': "Flat icon style, simple design,  --v 6.1"
     }
 
     face_model_part = ""
